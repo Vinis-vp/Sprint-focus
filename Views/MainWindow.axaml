@@ -3,10 +3,13 @@
         xmlns:vm="using:SprintFocus.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
         x:Class="SprintFocus.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
+        Width="900" Height="560"
+        MinWidth="640" MinHeight="460"
+        WindowStartupLocation="CenterScreen"
         Title="SprintFocus">
 
     <Design.DataContext>
@@ -15,8 +18,31 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+    <Grid ColumnDefinitions="190,*">
+
+        <!-- Menu lateral -->
+        <Border Grid.Column="0" Classes="sidebar">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="SprintFocus" Classes="brand" />
+                <ListBox ItemsSource="{Binding Pages}"
+                         SelectedItem="{Binding SelectedPage}"
+                         Classes="nav">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NavItem">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="{Binding Glyph}" Width="18" TextAlignment="Center" />
+                                <TextBlock Text="{Binding Title}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Página atual: o ViewLocator resolve TimerViewModel -> TimerView, etc. -->
+        <ContentControl Grid.Column="1"
+                        Content="{Binding SelectedPage.Page}"
+                        Margin="40,32" />
+    </Grid>
 
 </Window>

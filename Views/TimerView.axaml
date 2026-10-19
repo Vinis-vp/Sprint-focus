@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SprintFocus.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
+             x:Class="SprintFocus.Views.TimerView"
+             x:DataType="vm:TimerViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Text="Timer" Classes="h1" />
+
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="20"
+                    Width="360">
+
+            <!-- Categoria da sessão de foco -->
+            <ListBox ItemsSource="{Binding Categories}"
+                     SelectedItem="{Binding SelectedCategory}"
+                     HorizontalAlignment="Center"
+                     Classes="chips">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
+
+            <!-- Relógio -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{Binding RemainingText}"
+                           FontSize="88"
+                           FontWeight="Light"
+                           FontFeatures="+tnum"
+                           HorizontalAlignment="Center" />
+                <TextBlock HorizontalAlignment="Center" Classes="muted">
+                    <Run Text="{Binding PhaseName}" FontWeight="SemiBold" />
+                    <Run Text=" · " />
+                    <Run Text="{Binding CycleText}" />
+                </TextBlock>
+            </StackPanel>
+
+            <ProgressBar Value="{Binding Progress}" Classes="thin" />
+
+            <!-- Controles -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                <Button Content="Iniciar" Command="{Binding StartCommand}" Classes="accent" MinWidth="96" />
+                <Button Content="Pausar" Command="{Binding PauseCommand}" MinWidth="96" />
+                <Button Content="Resetar" Command="{Binding ResetCommand}" />
+                <Button Content="Pular" Command="{Binding SkipCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

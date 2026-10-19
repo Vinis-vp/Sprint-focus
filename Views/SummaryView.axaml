@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SprintFocus.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
+             x:Class="SprintFocus.Views.SummaryView"
+             x:DataType="vm:SummaryViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="560" HorizontalAlignment="Left">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Resumo de hoje" Classes="h1" />
+                <TextBlock Classes="muted">
+                    <Run Text="Tempo total de foco: " />
+                    <Run Text="{Binding TotalText}" FontWeight="SemiBold" />
+                </TextBlock>
+            </StackPanel>
+
+            <Border Classes="card">
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="18" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CategorySummary">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{Binding Category}" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding TotalText}" Classes="muted" />
+                                </Grid>
+                                <ProgressBar Value="{Binding Share}"
+                                             Foreground="{Binding Brush}"
+                                             Classes="thin" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- Gancho para o monitoramento de vídeos (próxima etapa) -->
+            <Border Classes="card" Opacity="0.7">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Vídeos fora do foco" FontWeight="SemiBold" />
+                    <TextBlock Text="Em breve: tempo assistindo vídeos sem estar em uma sessão de trabalho ou estudo."
+                               TextWrapping="Wrap"
+                               Classes="muted" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

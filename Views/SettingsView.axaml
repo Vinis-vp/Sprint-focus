@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SprintFocus.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
+             x:Class="SprintFocus.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="560" HorizontalAlignment="Left">
+            <TextBlock Text="Configurações" Classes="h1" />
+
+            <Border Classes="card">
+                <Grid ColumnDefinitions="*,180" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+                    <TextBlock Grid.Row="0" Text="Foco (min)" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="0" Grid.Column="1"
+                                   Value="{Binding Pomodoro.FocusMinutes}"
+                                   Minimum="1" Maximum="120" FormatString="0" />
+
+                    <TextBlock Grid.Row="1" Text="Pausa curta (min)" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                   Value="{Binding Pomodoro.ShortBreakMinutes}"
+                                   Minimum="1" Maximum="60" FormatString="0" />
+
+                    <TextBlock Grid.Row="2" Text="Pausa longa (min)" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="2" Grid.Column="1"
+                                   Value="{Binding Pomodoro.LongBreakMinutes}"
+                                   Minimum="1" Maximum="60" FormatString="0" />
+
+                    <TextBlock Grid.Row="3" Text="Ciclos até a pausa longa" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Row="3" Grid.Column="1"
+                                   Value="{Binding Pomodoro.CyclesBeforeLongBreak}"
+                                   Minimum="1" Maximum="10" FormatString="0" />
+                </Grid>
+            </Border>
+
+            <Border Classes="card">
+                <Grid ColumnDefinitions="*,180" RowDefinitions="Auto,Auto" RowSpacing="14">
+                    <StackPanel Grid.Row="0" Spacing="2">
+                        <TextBlock Text="Mini-timer ao minimizar" />
+                        <TextBlock Text="Mostra o tempo e a fase num canto da tela."
+                                   FontSize="12" Classes="muted" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="1"
+                                  IsChecked="{Binding Overlay.Enabled}"
+                                  OnContent="" OffContent=""
+                                  HorizontalAlignment="Right" />
+
+                    <TextBlock Grid.Row="1" Text="Posição" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="1" Grid.Column="1"
+                              ItemsSource="{Binding CornerOptions}"
+                              SelectedIndex="{Binding SelectedCornerIndex}"
+                              IsEnabled="{Binding Overlay.Enabled}"
+                              HorizontalAlignment="Stretch" />
+                </Grid>
+            </Border>
+
+            <Border Classes="card">
+                <Grid ColumnDefinitions="*,180">
+                    <TextBlock Text="Tema" VerticalAlignment="Center" />
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding ThemeOptions}"
+                              SelectedIndex="{Binding SelectedThemeIndex}"
+                              HorizontalAlignment="Stretch" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
