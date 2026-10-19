@@ -1,17 +1,25 @@
 using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SprintFocus.Models;
+using SprintFocus.Services;
 
 namespace SprintFocus.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
-    public SettingsViewModel(PomodoroSettings pomodoro, OverlaySettings overlay)
+    private readonly PhaseAlerts _alerts;
+
+    public SettingsViewModel(PomodoroSettings pomodoro, OverlaySettings overlay, PhaseAlerts alerts)
     {
         Pomodoro = pomodoro;
         Overlay = overlay;
+        _alerts = alerts;
     }
+
+    [RelayCommand]
+    private void TestAlerts() => _alerts.Test();
 
     public PomodoroSettings Pomodoro { get; }
 

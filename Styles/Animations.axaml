@@ -1,0 +1,69 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Animações reutilizáveis, aplicadas por classe (ex.: Classes.pulse="{Binding ...}").
+
+        Transformações são animadas pelas propriedades de cada transform (ScaleTransform.ScaleX,
+        TranslateTransform.Y, RotateTransform.Angle): o Avalonia monta sozinho um TransformGroup
+        no RenderTransform do controle. Animar o RenderTransform inteiro ("scale(1.04)") NÃO é
+        suportado no Avalonia 12 e lança exceção ao aplicar o estilo.
+        Transformações são feitas na renderização e não afetam o layout.
+    -->
+
+    <!-- Pulso suave: usado no relógio durante o último minuto -->
+    <Style Selector=":is(Control).pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1" IterationCount="Infinite" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                    <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="ScaleTransform.ScaleX" Value="1.04" />
+                    <Setter Property="ScaleTransform.ScaleY" Value="1.04" />
+                    <Setter Property="Opacity" Value="0.7" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                    <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Mascote focado: sobe e desce de leve, como se estivesse "em ritmo" -->
+    <Style Selector=":is(Control).bob">
+        <Style.Animations>
+            <Animation Duration="0:0:1.2" IterationCount="Infinite" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="TranslateTransform.Y" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="TranslateTransform.Y" Value="-2" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="TranslateTransform.Y" Value="0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Mascote descansando: balança devagar de um lado para o outro -->
+    <Style Selector=":is(Control).sway">
+        <Style.Animations>
+            <Animation Duration="0:0:2.4" IterationCount="Infinite" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="-6" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="RotateTransform.Angle" Value="6" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="-6" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+</Styles>

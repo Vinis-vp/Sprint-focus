@@ -25,12 +25,24 @@ public partial class MainWindow : Window
         base.OnDataContextChanged(e);
 
         if (_viewModel is not null)
+        {
             _viewModel.Overlay.PropertyChanged -= OnOverlaySettingsChanged;
+            _viewModel.Timer.PhaseCompleted -= OnPhaseCompleted;
+        }
 
         _viewModel = DataContext as MainViewModel;
 
         if (_viewModel is not null)
+        {
             _viewModel.Overlay.PropertyChanged += OnOverlaySettingsChanged;
+            _viewModel.Timer.PhaseCompleted += OnPhaseCompleted;
+        }
+    }
+
+    private void OnPhaseCompleted(object? sender, PomodoroPhase finished)
+    {
+        if (_viewModel?.Pomodoro.FlashOverlayOnPhaseEnd == true)
+            _overlay?.Flash();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -88,7 +100,8 @@ public partial class MainWindow : Window
     private void RestoreFromOverlay()
     {
         _overlay?.Hide();
+        // Sem Activate(): no GNOME, pedir foco explicitamente faz o sistema exibir
+        // a notificação "SprintFocus está pronto" em vez de focar a janela.
         WindowState = WindowState.Normal;
-        Activate();
     }
 }

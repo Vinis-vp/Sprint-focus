@@ -36,6 +36,52 @@
             </Border>
 
             <Border Classes="card">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Iniciar próxima fase automaticamente" />
+                        <TextBlock Text="Emenda foco → pausa → foco sem precisar clicar em Iniciar."
+                                   FontSize="12" Classes="muted" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1"
+                                  IsChecked="{Binding Pomodoro.AutoStartNextPhase}"
+                                  OnContent="" OffContent=""
+                                  VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <Border Classes="card">
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+                    <StackPanel Grid.Row="0" Spacing="2">
+                        <TextBlock Text="Avisos ao terminar uma fase" FontWeight="SemiBold" />
+                        <TextBlock Text="Como avisar quando o foco ou a pausa acaba."
+                                   FontSize="12" Classes="muted" />
+                    </StackPanel>
+                    <Button Grid.Row="0" Grid.Column="1"
+                            Content="Testar avisos"
+                            Command="{Binding TestAlertsCommand}"
+                            VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Row="1" Text="Som" VerticalAlignment="Center" />
+                    <ToggleSwitch Grid.Row="1" Grid.Column="1"
+                                  IsChecked="{Binding Pomodoro.PlaySoundOnPhaseEnd}"
+                                  OnContent="" OffContent=""
+                                  HorizontalAlignment="Right" />
+
+                    <TextBlock Grid.Row="2" Text="Notificação do sistema" VerticalAlignment="Center" />
+                    <ToggleSwitch Grid.Row="2" Grid.Column="1"
+                                  IsChecked="{Binding Pomodoro.ShowNotificationOnPhaseEnd}"
+                                  OnContent="" OffContent=""
+                                  HorizontalAlignment="Right" />
+
+                    <TextBlock Grid.Row="3" Text="Piscar o mini-timer" VerticalAlignment="Center" />
+                    <ToggleSwitch Grid.Row="3" Grid.Column="1"
+                                  IsChecked="{Binding Pomodoro.FlashOverlayOnPhaseEnd}"
+                                  OnContent="" OffContent=""
+                                  HorizontalAlignment="Right" />
+                </Grid>
+            </Border>
+
+            <Border Classes="card">
                 <Grid ColumnDefinitions="*,180" RowDefinitions="Auto,Auto" RowSpacing="14">
                     <StackPanel Grid.Row="0" Spacing="2">
                         <TextBlock Text="Mini-timer ao minimizar" />

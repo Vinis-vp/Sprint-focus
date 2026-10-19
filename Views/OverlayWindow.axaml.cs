@@ -15,21 +15,25 @@ public partial class OverlayWindow : Window
 
     // Depois que o usuário arrasta a janela, passamos a lembrar onde ela ficou
     // em vez de usar o canto configurado.
-    private bool _userMoved;
     private PixelPoint? _customPosition;
+
+    // Estado do arraste manual: posição da janela e do ponteiro (em pixels de tela) no início.
+    private PixelPoint? _dragStartWindow;
+    private PixelPoint _dragStartPointer;
 
     public OverlayWindow()
     {
         InitializeComponent();
         Deactivated += (_, _) => EnsureTopmost();
+    }
 
-        // No X11 o arraste é assíncrono: a posição final chega por este evento,
-        // não logo após BeginMoveDrag retornar.
-        PositionChanged += (_, e) =>
-        {
-            if (_userMoved && IsVisible)
-                _customPosition = e.Point;
-        };
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        // O mini-timer nunca deve maximizar/ocupar a tela (ex.: atalho Super+↑ ou duplo clique).
+        if (change.Property == WindowStateProperty && WindowState is WindowState.Maximized or WindowState.FullScreen)
+            WindowState = WindowState.Normal;
     }
 
     /// <summary>Disparado pelo botão de abrir a janela principal.</summary>
@@ -43,20 +47,63 @@ public partial class OverlayWindow : Window
         EnsureTopmost();
     }
 
-    /// <summary>Esquece a posição arrastada, voltando a usar o canto configurado.</summary>
-    public void ResetPosition()
+    /// <summary>Pisca o overlay na cor da categoria para chamar atenção (ex.: fim de uma fase).</summary>
+    public void Flash()
     {
-        _userMoved = false;
-        _customPosition = null;
+        if (!IsVisible)
+            return;
+
+        // Remover e adicionar de novo reinicia a animação caso ainda esteja rodando.
+        FlashLayer.Classes.Remove("flash");
+        FlashLayer.Classes.Add("flash");
+        DispatcherTimer.RunOnce(() => FlashLayer.Classes.Remove("flash"), TimeSpan.FromSeconds(2));
     }
 
+    /// <summary>Esquece a posição arrastada, voltando a usar o canto configurado.</summary>
+    public void ResetPosition() => _customPosition = null;
+
+    // Arraste manual em vez de BeginMoveDrag: entregar o arraste ao gerenciador de janelas
+    // ativa o "edge tiling" do GNOME (soltar no topo maximiza, nas laterais ocupa meia tela).
+    // Movendo nós mesmos, o sistema só recebe novas posições e não aplica esses encaixes.
     private void OnDragAreaPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             return;
 
-        _userMoved = true;
-        BeginMoveDrag(e);
+        _dragStartWindow = Position;
+        _dragStartPointer = this.PointToScreen(e.GetPosition(this));
+        // Captura: continua recebendo PointerMoved mesmo se o mouse sair da janela durante o arraste.
+        e.Pointer.Capture((IInputElement?)sender);
+    }
+
+    private void OnDragAreaMoved(object? sender, PointerEventArgs e)
+    {
+        if (_dragStartWindow is not { } start)
+            return;
+
+        var pointer = this.PointToScreen(e.GetPosition(this));
+        Position = new PixelPoint(
+            start.X + pointer.X - _dragStartPointer.X,
+            start.Y + pointer.Y - _dragStartPointer.Y);
+    }
+
+    private void OnDragAreaReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_dragStartWindow is null)
+            return;
+
+        EndDrag();
+        e.Pointer.Capture(null);
+    }
+
+    private void OnDragCaptureLost(object? sender, PointerCaptureLostEventArgs e) => EndDrag();
+
+    private void EndDrag()
+    {
+        // Só lembra a posição se a janela realmente saiu do lugar (um clique simples não conta).
+        if (_dragStartWindow is { } start && start != Position)
+            _customPosition = Position;
+        _dragStartWindow = null;
     }
 
     private void OnResizeGripPressed(object? sender, PointerPressedEventArgs e)

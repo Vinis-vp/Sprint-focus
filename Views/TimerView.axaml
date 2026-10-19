@@ -1,11 +1,23 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:SprintFocus.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
              x:Class="SprintFocus.Views.TimerView"
              x:DataType="vm:TimerViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="StackPanel.btn-content">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="6" />
+        </Style>
+        <Style Selector="StackPanel.btn-content > ic|SymbolIcon">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*">
         <TextBlock Grid.Row="0" Text="Timer" Classes="h1" />
@@ -13,8 +25,7 @@
         <StackPanel Grid.Row="1"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Spacing="20"
-                    Width="360">
+                    Spacing="24">
 
             <!-- Categoria da sessão de foco -->
             <ListBox ItemsSource="{Binding Categories}"
@@ -28,28 +39,65 @@
                 </ListBox.ItemsPanel>
             </ListBox>
 
-            <!-- Relógio -->
-            <StackPanel Spacing="4">
-                <TextBlock Text="{Binding RemainingText}"
-                           FontSize="88"
-                           FontWeight="Light"
-                           FontFeatures="+tnum"
-                           HorizontalAlignment="Center" />
-                <TextBlock HorizontalAlignment="Center" Classes="muted">
-                    <Run Text="{Binding PhaseName}" FontWeight="SemiBold" />
-                    <Run Text=" · " />
-                    <Run Text="{Binding CycleText}" />
-                </TextBlock>
-            </StackPanel>
+            <!-- Relógio dentro do anel de progresso -->
+            <Panel Width="260" Height="260" HorizontalAlignment="Center">
+                <!-- Trilho -->
+                <Ellipse Stroke="{DynamicResource TrackBrush}" StrokeThickness="10" />
 
-            <ProgressBar Value="{Binding Progress}" Classes="thin" />
+                <!-- Progresso: começa no topo (-90°) e cresce no sentido horário -->
+                <Arc StartAngle="-90"
+                     SweepAngle="{Binding ProgressAngle}"
+                     Stroke="{Binding CategoryBrush}"
+                     StrokeThickness="10"
+                     StrokeLineCap="Round">
+                    <Arc.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="SweepAngle" Duration="0:0:0.3" />
+                        </Transitions>
+                    </Arc.Transitions>
+                </Arc>
+
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding RemainingText}"
+                               FontSize="60"
+                               FontWeight="Light"
+                               FontFeatures="+tnum"
+                               HorizontalAlignment="Center"
+                               Classes.pulse="{Binding IsFinalMinute}" />
+                    <TextBlock HorizontalAlignment="Center" FontSize="13" Classes="muted">
+                        <Run Text="{Binding PhaseName}" FontWeight="SemiBold" />
+                        <Run Text=" · " />
+                        <Run Text="{Binding CycleText}" />
+                    </TextBlock>
+                </StackPanel>
+            </Panel>
 
             <!-- Controles -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-                <Button Content="Iniciar" Command="{Binding StartCommand}" Classes="accent" MinWidth="96" />
-                <Button Content="Pausar" Command="{Binding PauseCommand}" MinWidth="96" />
-                <Button Content="Resetar" Command="{Binding ResetCommand}" />
-                <Button Content="Pular" Command="{Binding SkipCommand}" />
+                <Button Command="{Binding StartCommand}" Classes="accent" MinWidth="104">
+                    <StackPanel Classes="btn-content">
+                        <ic:SymbolIcon Symbol="Play" />
+                        <TextBlock Text="Iniciar" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding PauseCommand}" MinWidth="104">
+                    <StackPanel Classes="btn-content">
+                        <ic:SymbolIcon Symbol="Pause" />
+                        <TextBlock Text="Pausar" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding AddTimeCommand}" ToolTip.Tip="Adicionar 30 segundos">
+                    <StackPanel Classes="btn-content">
+                        <ic:SymbolIcon Symbol="Add" />
+                        <TextBlock Text="30s" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ResetCommand}" ToolTip.Tip="Resetar fase">
+                    <ic:SymbolIcon Symbol="ArrowReset" FontSize="16" />
+                </Button>
+                <Button Command="{Binding SkipCommand}" ToolTip.Tip="Pular para a próxima fase">
+                    <ic:SymbolIcon Symbol="Next" FontSize="16" />
+                </Button>
             </StackPanel>
         </StackPanel>
     </Grid>

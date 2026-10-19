@@ -5,17 +5,11 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentIcons.Common;
 using SprintFocus.Models;
 using SprintFocus.Services;
 
 namespace SprintFocus.ViewModels;
-
-public enum PomodoroPhase
-{
-    Focus,
-    ShortBreak,
-    LongBreak,
-}
 
 public partial class TimerViewModel : ViewModelBase
 {
@@ -24,7 +18,12 @@ public partial class TimerViewModel : ViewModelBase
     private readonly DispatcherTimer _ticker;
     private readonly Stopwatch _sinceLastTick = new();
 
+    private static readonly TimeSpan ExtraTime = TimeSpan.FromSeconds(30);
+
     private int _completedFocusSessions;
+
+    // Duração total da fase atual, incluindo tempo extra adicionado com "+30s".
+    private TimeSpan _phaseTotal;
 
     public TimerViewModel(TimeLog timeLog, PomodoroSettings settings)
     {
@@ -35,8 +34,14 @@ public partial class TimerViewModel : ViewModelBase
         _ticker = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _ticker.Tick += OnTick;
 
-        Remaining = PhaseDuration;
+        RestartPhaseTime();
     }
+
+    /// <summary>
+    /// Disparado quando uma fase termina naturalmente (o tempo zerou), com a fase que acabou.
+    /// Não dispara ao pular manualmente.
+    /// </summary>
+    public event EventHandler<PomodoroPhase>? PhaseCompleted;
 
     public ActivityCategory[] Categories { get; } = Enum.GetValues<ActivityCategory>();
 
@@ -47,19 +52,37 @@ public partial class TimerViewModel : ViewModelBase
     public IBrush CategoryBrush => new SolidColorBrush(SelectedCategory.GetColor());
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PhaseName), nameof(CycleText), nameof(Progress))]
+    [NotifyPropertyChangedFor(nameof(PhaseName), nameof(CycleText), nameof(ProgressAngle))]
+    [NotifyPropertyChangedFor(nameof(Mood), nameof(MascotEmoji), nameof(IsMascotFocused), nameof(IsMascotResting))]
     public partial PomodoroPhase Phase { get; set; } = PomodoroPhase.Focus;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(RemainingText), nameof(Progress))]
+    [NotifyPropertyChangedFor(nameof(RemainingText), nameof(ProgressAngle), nameof(IsFinalMinute))]
     public partial TimeSpan Remaining { get; set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(PauseCommand))]
-    [NotifyPropertyChangedFor(nameof(ToggleGlyph))]
+    [NotifyPropertyChangedFor(nameof(ToggleIcon), nameof(IsFinalMinute))]
+    [NotifyPropertyChangedFor(nameof(Mood), nameof(MascotEmoji), nameof(IsMascotFocused), nameof(IsMascotResting))]
     public partial bool IsRunning { get; set; }
 
-    public string ToggleGlyph => IsRunning ? "❚❚" : "▶";
+    public Symbol ToggleIcon => IsRunning ? Symbol.Pause : Symbol.Play;
+
+    /// <summary>Humor do mascote: parado se o timer não roda; senão, focado ou descansando conforme a fase.</summary>
+    public MascotMood Mood =>
+        !IsRunning ? MascotMood.Idle
+        : Phase == PomodoroPhase.Focus ? MascotMood.Focused
+        : MascotMood.Resting;
+
+    public string MascotEmoji => Mood.GetEmoji();
+
+    // Atalhos booleanos para a View ligar classes de animação (Classes.bob/sway) ao humor.
+    public bool IsMascotFocused => Mood == MascotMood.Focused;
+
+    public bool IsMascotResting => Mood == MascotMood.Resting;
+
+    /// <summary>Timer rodando no último minuto da fase (o relógio pulsa).</summary>
+    public bool IsFinalMinute => IsRunning && Remaining > TimeSpan.Zero && Remaining <= TimeSpan.FromMinutes(1);
 
     public string RemainingText =>
         $"{(int)Remaining.TotalMinutes:00}:{Remaining.Seconds:00}";
@@ -75,8 +98,11 @@ public partial class TimerViewModel : ViewModelBase
         $"Ciclo {_completedFocusSessions % _settings.CyclesBeforeLongBreak + 1} de {_settings.CyclesBeforeLongBreak}";
 
     /// <summary>Percentual (0–100) já decorrido da fase atual.</summary>
-    public double Progress =>
-        PhaseDuration.TotalSeconds <= 0 ? 0 : 100 * (1 - Remaining.TotalSeconds / PhaseDuration.TotalSeconds);
+    public double ProgressAngle =>
+        _phaseTotal.TotalSeconds <= 0
+            ? 0
+            // 359.9 e não 360: com 360° início e fim do arco coincidem e nada é desenhado.
+            : Math.Min(359.9, 360 * (1 - Remaining.TotalSeconds / _phaseTotal.TotalSeconds));
 
     private TimeSpan PhaseDuration => TimeSpan.FromMinutes(Phase switch
     {
@@ -120,7 +146,15 @@ public partial class TimerViewModel : ViewModelBase
     {
         if (IsRunning)
             Pause();
-        Remaining = PhaseDuration;
+        RestartPhaseTime();
+    }
+
+    /// <summary>Estende a fase atual em 30 segundos (funciona rodando ou pausado).</summary>
+    [RelayCommand]
+    private void AddTime()
+    {
+        _phaseTotal += ExtraTime;
+        Remaining += ExtraTime;
     }
 
     [RelayCommand]
@@ -138,8 +172,13 @@ public partial class TimerViewModel : ViewModelBase
 
         if (Remaining == TimeSpan.Zero)
         {
+            var finished = Phase;
             Pause();
             AdvancePhase();
+            PhaseCompleted?.Invoke(this, finished);
+
+            if (_settings.AutoStartNextPhase)
+                Start();
         }
     }
 
@@ -161,6 +200,15 @@ public partial class TimerViewModel : ViewModelBase
         return elapsed;
     }
 
+    /// <summary>Reinicia a contagem da fase atual com a duração configurada (descartando tempo extra).</summary>
+    private void RestartPhaseTime()
+    {
+        _phaseTotal = PhaseDuration;
+        Remaining = PhaseDuration;
+        // Se Remaining já tinha esse valor, o setter não notifica; garante a barra atualizada.
+        OnPropertyChanged(nameof(ProgressAngle));
+    }
+
     private void AdvancePhase()
     {
         if (Phase == PomodoroPhase.Focus)
@@ -175,14 +223,21 @@ public partial class TimerViewModel : ViewModelBase
             Phase = PomodoroPhase.Focus;
         }
 
-        Remaining = PhaseDuration;
+        RestartPhaseTime();
     }
 
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
+        // Só mudanças de duração/ciclo afetam o timer; avisos e afins não devem reiniciá-lo.
+        if (e.PropertyName is not (nameof(PomodoroSettings.FocusMinutes)
+                                or nameof(PomodoroSettings.ShortBreakMinutes)
+                                or nameof(PomodoroSettings.LongBreakMinutes)
+                                or nameof(PomodoroSettings.CyclesBeforeLongBreak)))
+            return;
+
         // Só aplica a nova duração se o timer estiver parado, para não "pular" no meio de uma sessão.
         if (!IsRunning)
-            Remaining = PhaseDuration;
+            RestartPhaseTime();
         OnPropertyChanged(nameof(CycleText));
     }
 }

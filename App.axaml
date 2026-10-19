@@ -28,6 +28,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="/Styles/Animations.axaml" />
 
         <!-- Menu lateral -->
         <Style Selector="Border.sidebar">

@@ -18,4 +18,17 @@ public partial class PomodoroSettings : ObservableObject
 
     [ObservableProperty]
     public partial int CyclesBeforeLongBreak { get; set; } = 4;
+
+    [ObservableProperty]
+    public partial bool PlaySoundOnPhaseEnd { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool ShowNotificationOnPhaseEnd { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool FlashOverlayOnPhaseEnd { get; set; } = true;
+
+    /// <summary>Ao terminar uma fase, inicia a próxima automaticamente (foco → pausa → foco).</summary>
+    [ObservableProperty]
+    public partial bool AutoStartNextPhase { get; set; }
 }

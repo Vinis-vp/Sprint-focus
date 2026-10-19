@@ -1,12 +1,14 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SprintFocus.ViewModels"
+        xmlns:ic="using:FluentIcons.Avalonia"
         x:Class="SprintFocus.Views.OverlayWindow"
         x:DataType="vm:TimerViewModel"
-        Width="300" Height="76"
-        MinWidth="240" MinHeight="64"
+        Width="370" Height="76"
+        MinWidth="310" MinHeight="64"
         MaxWidth="720" MaxHeight="280"
         CanResize="True"
+        CanMaximize="False"
         WindowDecorations="None"
         Topmost="True"
         ShowInTaskbar="False"
@@ -28,6 +30,23 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+
+        <!-- Pisca 3x na cor da categoria quando uma fase termina (classe adicionada pelo code-behind) -->
+        <Style Selector="Border#FlashLayer.flash">
+            <Style.Animations>
+                <Animation Duration="0:0:0.6" IterationCount="3">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.45" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
     </Window.Styles>
 
     <!-- Arrastar em qualquer área vazia move a janela -->
@@ -36,22 +55,47 @@
             BorderThickness="1"
             CornerRadius="14"
             ClipToBounds="True"
-            PointerPressed="OnDragAreaPressed">
+            PointerPressed="OnDragAreaPressed"
+            PointerMoved="OnDragAreaMoved"
+            PointerReleased="OnDragAreaReleased"
+            PointerCaptureLost="OnDragCaptureLost">
         <Panel>
-            <!-- Coluna 1 (ponto da categoria) reservada para o futuro mascote/animações. -->
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8" Margin="6,10,10,10">
+            <!-- Camada do efeito de piscar, atrás do conteúdo e invisível ao mouse -->
+            <Border x:Name="FlashLayer"
+                    Background="{Binding CategoryBrush}"
+                    Opacity="0"
+                    IsHitTestVisible="False" />
 
-                <TextBlock Grid.Column="0"
-                           Text="⠿"
-                           FontSize="18"
-                           VerticalAlignment="Center"
-                           Cursor="SizeAll"
-                           Classes="muted"
-                           ToolTip.Tip="Arraste para mover" />
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10" Margin="6,10,10,10">
 
-                <Ellipse Grid.Column="1" Width="10" Height="10"
-                         Fill="{Binding CategoryBrush}"
-                         VerticalAlignment="Center" />
+                <ic:SymbolIcon Grid.Column="0"
+                               Symbol="ReOrderDotsVertical"
+                               FontSize="18"
+                               VerticalAlignment="Center"
+                               Cursor="SizeAll"
+                               Opacity="0.6"
+                               ToolTip.Tip="Arraste para mover" />
+
+                <!-- Espaço do mascote (provisório: emoji conforme o humor) com selo da categoria -->
+                <Panel Grid.Column="1" Width="40" Height="40" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource TrackBrush}" CornerRadius="20">
+                        <!-- Fonte de emoji explícita: sem ela, ☕/😴 caem em fontes monocromáticas (ex.: DejaVu) -->
+                        <TextBlock Text="{Binding MascotEmoji}"
+                                   FontFamily="Noto Color Emoji, Segoe UI Emoji, Apple Color Emoji"
+                                   FontSize="22"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   ToolTip.Tip="{Binding Mood}"
+                                   Classes.bob="{Binding IsMascotFocused}"
+                                   Classes.sway="{Binding IsMascotResting}" />
+                    </Border>
+                    <Ellipse Width="12" Height="12"
+                             Fill="{Binding CategoryBrush}"
+                             Stroke="{DynamicResource CardBrush}"
+                             StrokeThickness="2"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Bottom" />
+                </Panel>
 
                 <!-- O Viewbox escala o relógio conforme o tamanho da janela -->
                 <Viewbox Grid.Column="2" Stretch="Uniform" HorizontalAlignment="Left">
@@ -59,7 +103,8 @@
                         <TextBlock Text="{Binding RemainingText}"
                                    FontSize="26"
                                    FontWeight="SemiBold"
-                                   FontFeatures="+tnum" />
+                                   FontFeatures="+tnum"
+                                   Classes.pulse="{Binding IsFinalMinute}" />
                         <TextBlock FontSize="12" Classes="muted">
                             <Run Text="{Binding PhaseName}" />
                             <Run Text=" · " />
@@ -69,18 +114,27 @@
                 </Viewbox>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
-                    <Button Content="{Binding ToggleGlyph}"
-                            Command="{Binding ToggleCommand}"
+                    <Button Command="{Binding ToggleCommand}"
                             Classes="mini"
-                            ToolTip.Tip="Iniciar / pausar" />
-                    <Button Content="⤢"
-                            Click="OnOpenMainClick"
+                            ToolTip.Tip="Iniciar / pausar">
+                        <ic:SymbolIcon Symbol="{Binding ToggleIcon}" />
+                    </Button>
+                    <Button Content="+30"
+                            Command="{Binding AddTimeCommand}"
                             Classes="mini"
-                            ToolTip.Tip="Abrir o SprintFocus" />
-                    <Button Content="✕"
-                            Click="OnCloseClick"
+                            Width="36"
+                            FontSize="11"
+                            ToolTip.Tip="Adicionar 30 segundos" />
+                    <Button Click="OnOpenMainClick"
                             Classes="mini"
-                            ToolTip.Tip="Fechar mini-timer" />
+                            ToolTip.Tip="Abrir o SprintFocus">
+                        <ic:SymbolIcon Symbol="Open" />
+                    </Button>
+                    <Button Click="OnCloseClick"
+                            Classes="mini"
+                            ToolTip.Tip="Fechar mini-timer">
+                        <ic:SymbolIcon Symbol="Dismiss" />
+                    </Button>
                 </StackPanel>
             </Grid>
 
