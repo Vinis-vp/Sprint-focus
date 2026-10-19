@@ -1,0 +1,101 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SprintFocus.ViewModels"
+        x:Class="SprintFocus.Views.OverlayWindow"
+        x:DataType="vm:TimerViewModel"
+        Width="300" Height="76"
+        MinWidth="240" MinHeight="64"
+        MaxWidth="720" MaxHeight="280"
+        CanResize="True"
+        WindowDecorations="None"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Title="SprintFocus — mini-timer">
+
+    <Window.Styles>
+        <!-- Botões pequenos e discretos da barra do overlay -->
+        <Style Selector="Button.mini">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Styles>
+
+    <!-- Arrastar em qualquer área vazia move a janela -->
+    <Border Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource TrackBrush}"
+            BorderThickness="1"
+            CornerRadius="14"
+            ClipToBounds="True"
+            PointerPressed="OnDragAreaPressed">
+        <Panel>
+            <!-- Coluna 1 (ponto da categoria) reservada para o futuro mascote/animações. -->
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8" Margin="6,10,10,10">
+
+                <TextBlock Grid.Column="0"
+                           Text="⠿"
+                           FontSize="18"
+                           VerticalAlignment="Center"
+                           Cursor="SizeAll"
+                           Classes="muted"
+                           ToolTip.Tip="Arraste para mover" />
+
+                <Ellipse Grid.Column="1" Width="10" Height="10"
+                         Fill="{Binding CategoryBrush}"
+                         VerticalAlignment="Center" />
+
+                <!-- O Viewbox escala o relógio conforme o tamanho da janela -->
+                <Viewbox Grid.Column="2" Stretch="Uniform" HorizontalAlignment="Left">
+                    <StackPanel>
+                        <TextBlock Text="{Binding RemainingText}"
+                                   FontSize="26"
+                                   FontWeight="SemiBold"
+                                   FontFeatures="+tnum" />
+                        <TextBlock FontSize="12" Classes="muted">
+                            <Run Text="{Binding PhaseName}" />
+                            <Run Text=" · " />
+                            <Run Text="{Binding SelectedCategory}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Viewbox>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
+                    <Button Content="{Binding ToggleGlyph}"
+                            Command="{Binding ToggleCommand}"
+                            Classes="mini"
+                            ToolTip.Tip="Iniciar / pausar" />
+                    <Button Content="⤢"
+                            Click="OnOpenMainClick"
+                            Classes="mini"
+                            ToolTip.Tip="Abrir o SprintFocus" />
+                    <Button Content="✕"
+                            Click="OnCloseClick"
+                            Classes="mini"
+                            ToolTip.Tip="Fechar mini-timer" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Grip de redimensionamento no canto inferior direito -->
+            <TextBlock Text="◢"
+                       FontSize="10"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Bottom"
+                       Margin="0,0,4,2"
+                       Padding="4,4,0,0"
+                       Background="Transparent"
+                       Cursor="BottomRightCorner"
+                       Classes="muted"
+                       ToolTip.Tip="Arraste para redimensionar"
+                       PointerPressed="OnResizeGripPressed" />
+        </Panel>
+    </Border>
+</Window>
