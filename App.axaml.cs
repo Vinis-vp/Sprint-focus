@@ -17,10 +17,14 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var viewModel = new MainViewModel();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel(),
+                DataContext = viewModel,
             };
+
+            // Exit dispara em qualquer encerramento "limpo" (fechar janela, logout...).
+            desktop.Exit += (_, _) => viewModel.SaveOnExit();
         }
 
         base.OnFrameworkInitializationCompleted();

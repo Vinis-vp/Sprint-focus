@@ -12,7 +12,7 @@ public partial class MainViewModel : ViewModelBase
 {
     public MainViewModel()
     {
-        var timeLog = new TimeLog();
+        var timeLog = _timeLog = new TimeLog(new SessionStore());
         var settings = Pomodoro;
         var alerts = new PhaseAlerts(settings);
 
@@ -30,6 +30,11 @@ public partial class MainViewModel : ViewModelBase
 
         SelectedPage = Pages[0];
     }
+
+    private readonly TimeLog _timeLog;
+
+    /// <summary>Grava o que ainda está só em memória (a sessão de foco aberta). Chamado ao encerrar o app.</summary>
+    public void SaveOnExit() => _timeLog.Flush();
 
     public NavItem[] Pages { get; }
 
