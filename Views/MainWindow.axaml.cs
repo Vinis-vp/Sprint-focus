@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using SprintFocus.Models;
 using SprintFocus.ViewModels;
 
@@ -99,9 +100,13 @@ public partial class MainWindow : Window
 
     private void RestoreFromOverlay()
     {
-        _overlay?.Hide();
-        // Sem Activate(): no GNOME, pedir foco explicitamente faz o sistema exibir
-        // a notificação "SprintFocus está pronto" em vez de focar a janela.
+        // Restaurar ANTES de esconder o overlay: ao sair de Minimized o próprio Avalonia envia
+        // _NET_ACTIVE_WINDOW (pedido de foco). Se o overlay sumir antes, o foco muda de lugar, o
+        // GNOME considera o pedido "atrasado" e mostra "SprintFocus está pronto" em vez de focar.
         WindowState = WindowState.Normal;
+
+        // Normalmente o overlay some pelo evento Activated; este Post garante que ele suma
+        // mesmo se o GNOME negar o foco à janela principal.
+        Dispatcher.UIThread.Post(() => _overlay?.Hide(), DispatcherPriority.Background);
     }
 }
