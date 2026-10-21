@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using SprintFocus.Models;
+using SprintFocus.Platform;
 
 namespace SprintFocus.Views;
 
@@ -43,6 +44,20 @@ public partial class OverlayWindow : Window
     public void ShowAt(Screen screen, OverlayCorner corner)
     {
         Position = _customPosition ?? GetCornerPosition(screen, corner);
+
+        // Linux/X11 (GNOME): com ShowActivated=False o Avalonia grava _NET_WM_USER_TIME=0 antes de
+        // mostrar a janela, e o Mutter transforma isso em "precisa de atenção" → aviso
+        // "SprintFocus is ready". Saída: declarar a janela como "não aceito foco" (WM_HINTS) e
+        // mostrar com ShowActivated=True — o zero não é gravado e, como ela não aceita foco,
+        // também não rouba o foco do app em uso. Fora do X11 mantemos ShowActivated=False.
+        ShowActivated = X11Interop.SetAcceptsFocus(this, false);
+
+        // Ao esconder, o gerenciador de janelas apaga os estados da janela (_NET_WM_STATE) e o
+        // Avalonia não os regrava: sem reaplicar, o mini-timer apareceria na barra de tarefas
+        // a partir da segunda vez que é mostrado.
+        ShowInTaskbar = true;
+        ShowInTaskbar = false;
+
         Show();
         EnsureTopmost();
     }
