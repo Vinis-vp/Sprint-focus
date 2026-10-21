@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
         x:Class="SprintFocus.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/sprintfocus.ico"
         Width="900" Height="560"
         MinWidth="640" MinHeight="460"
         WindowStartupLocation="CenterScreen"

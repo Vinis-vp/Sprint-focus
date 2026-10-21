@@ -15,6 +15,7 @@
         ShowActivated="False"
         TransparencyLevelHint="Transparent"
         Background="Transparent"
+        Icon="/Assets/sprintfocus.ico"
         Title="SprintFocus — mini-timer">
 
     <Window.Styles>
